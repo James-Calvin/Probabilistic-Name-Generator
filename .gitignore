@@ -38,3 +38,5 @@ publish/
 
 # Visual Studio 2015
 .vs/
+
+.fake

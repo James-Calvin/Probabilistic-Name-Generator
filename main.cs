@@ -16,7 +16,7 @@ class Program
     const string SURNAMES_AMERICAN = "DATA/Surnames/Surnames_American.csv"; // Native north-american
     const string SURNAMES_ASIAN = "DATA/Surnames/Surnames_Asian.csv";
     const string SURNAMES_BLACK = "DATA/Surnames/Surnames_Black.csv";
-    const string SURNAMES_Hispanic = "DATA/Surnames/Surnames_Hispanic.csv";
+    const string SURNAMES_HISPANIC = "DATA/Surnames/Surnames_Hispanic.csv";
     const string SURNAMES_WHITE = "DATA/Surnames/Surnames_White.csv";
 
     enum ArgType
@@ -97,7 +97,7 @@ class Program
             case "black":
                 return SURNAMES_BLACK;
             case "hispanic":
-                return SURNAMES_Hispanic;
+                return SURNAMES_HISPANIC;
             case "white":
                 return SURNAMES_WHITE;
 
@@ -118,6 +118,36 @@ class Program
 
     public static void Main(string[] args)
     {
+        if (args.Length > 0)
+        {
+            switch (args[0].ToLower())
+            {
+                case "-help":
+                case "help":
+                case "-h":
+                case "h":
+                case "-?":
+                case "?":
+                    Console.WriteLine("Generate random names with the syntax:");
+                    Console.WriteLine("  namegen {gender} {race} {beta1} {beta2}");
+                    Console.WriteLine("gender: male | female | neutral");
+                    Console.WriteLine("race: american | asian | black | hispanic | white");
+                    Console.WriteLine("beta1: beta value for given name (first name)");
+                    Console.WriteLine("beta2: beta value for the surname (last name)");
+                    Console.WriteLine("All arguments are optional.");
+                    Console.WriteLine("If no gender or race is selected, then names are generated from the entire set of name in the data.");
+                    Console.WriteLine("Beta values represent how common of a name to generate.");
+                    Console.WriteLine("Any value can be used (E.g. -2.3), but here are some interesting values to use:");
+                    Console.WriteLine(": 2 means names common names will appear most of the time.");
+                    Console.WriteLine(": 1 means names generate as often as they appear in the data.");
+                    Console.WriteLine(": 0 means all names generate with equal chance of being selected.");
+                    Console.WriteLine(": -1 means uncommon names are generated more often than common");
+                    Console.WriteLine("The order of arguments does not matter (except that beta1 must appear before beta2). ");
+                    Console.WriteLine("If only one beta value is given, that value will be used for both the given name and the surname.");
+                    return;
+            }
+        }
+
         string givenNameDataPath = GIVEN_NAMES_ALL;
         string surnameDataPath = SURNAMES_ALL;
         double givenNameBeta = 1;

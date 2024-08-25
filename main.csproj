@@ -4,20 +4,12 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp7.0</TargetFramework>
     <StartupObject>Program</StartupObject>
-    <RootNamespace>Probabilistic-Name-Generator</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="DATA\Given-Names\All.txt" />
-    <EmbeddedResource Include="DATA\Given-Names\Female.txt" />
-    <EmbeddedResource Include="DATA\Given-Names\Male.txt" />
-    <EmbeddedResource Include="DATA\Given-Names\Neutral.txt" />
-    <EmbeddedResource Include="DATA\Surnames\Surnames_All.csv" />
-    <EmbeddedResource Include="DATA\Surnames\Surnames_American.csv" />
-    <EmbeddedResource Include="DATA\Surnames\Surnames_Asian.csv" />
-    <EmbeddedResource Include="DATA\Surnames\Surnames_Black.csv" />
-    <EmbeddedResource Include="DATA\Surnames\Surnames_Hispanic.csv" />
-    <EmbeddedResource Include="DATA\Surnames\Surnames_White.csv" />
+  <None Update="DATA\**\*">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
 </ItemGroup>
 
 </Project>

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.Reflection;
 
 
 class Program
@@ -104,6 +106,16 @@ class Program
         }
     }
 
+    static string GetExecutableDirectory()
+    {
+        return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+    }
+
+    static string GetDataFilePath(string relativePath)
+    {
+        return Path.Combine(GetExecutableDirectory(), relativePath);
+    }
+
     public static void Main(string[] args)
     {
         string givenNameDataPath = GIVEN_NAMES_ALL;
@@ -157,7 +169,9 @@ class Program
         }
 
         // Load the relative data with the beta values
+        givenNameDataPath = GetDataFilePath(givenNameDataPath);
         var givenNameData = NameData.Load(givenNameDataPath, givenNameBeta);
+        surnameDataPath = GetDataFilePath(surnameDataPath);
         var surnameData = NameData.Load(surnameDataPath, surnameBeta);
 
         // Generate the name

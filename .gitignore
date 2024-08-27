@@ -35,6 +35,7 @@ msbuild.wrn
 
 # Executable
 publish/
+publish-test/
 
 # Visual Studio 2015
 .vs/

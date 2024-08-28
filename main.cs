@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Reflection;
 
 
 class Program
 {
+    public static Version version = new(3, 0, 0);
+
     const string GIVEN_NAMES_ALL = "DATA/Given-Names/All.txt";
     const string GIVEN_NAMES_FEMALES = "DATA/Given-Names/Female.txt";
     const string GIVEN_NAMES_MALES = "DATA/Given-Names/Male.txt";
@@ -108,7 +109,7 @@ class Program
 
     static string GetExecutableDirectory()
     {
-        return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        return Path.GetDirectoryName(AppContext.BaseDirectory);
     }
 
     static string GetDataFilePath(string relativePath)
@@ -118,40 +119,48 @@ class Program
 
     public static void Main(string[] args)
     {
+        // Utility arguments
         if (args.Length > 0)
         {
             switch (args[0].ToLower())
             {
-                case "-help":
                 case "help":
-                case "-h":
                 case "h":
-                case "-?":
                 case "?":
-                    Console.WriteLine("Generate random names with the syntax:");
-                    Console.WriteLine("  namegen {gender} {race} {beta1} {beta2}");
-                    Console.WriteLine("gender: male | female | neutral");
-                    Console.WriteLine("race: american | asian | black | hispanic | white");
-                    Console.WriteLine("beta1: beta value for given name (first name)");
-                    Console.WriteLine("beta2: beta value for the surname (last name)");
+                    Console.WriteLine("Usage: namegen {gender} {rarity1} {race} {rarity2}");
+                    Console.WriteLine("- gender: [male | m | female | f | neutral | n]");
+                    Console.WriteLine("- rarity1: the given name (first name) rarity");
+                    Console.WriteLine("- race: [american | asian | black | hispanic | white]");
+                    Console.WriteLine("  - Note: race attribute affects surname only.");
+                    Console.WriteLine("- rarity2: the surname (last name) rarity");
                     Console.WriteLine("All arguments are optional.");
-                    Console.WriteLine("If no gender or race is selected, then names are generated from the entire set of name in the data.");
-                    Console.WriteLine("Beta values represent how common of a name to generate.");
-                    Console.WriteLine("Any value can be used (E.g. -2.3), but here are some interesting values to use:");
-                    Console.WriteLine(": 2 means names common names will appear most of the time.");
-                    Console.WriteLine(": 1 means names generate as often as they appear in the data.");
-                    Console.WriteLine(": 0 means all names generate with equal chance of being selected.");
-                    Console.WriteLine(": -1 means uncommon names are generated more often than common");
-                    Console.WriteLine("The order of arguments does not matter (except that beta1 must appear before beta2). ");
-                    Console.WriteLine("If only one beta value is given, that value will be used for both the given name and the surname.");
+                    Console.WriteLine("The order of arguments does not matter (except that rarity1 must appear before rarity2). ");
+                    Console.WriteLine("Rarity: values range from 0 to 100. Default is 50 (follows the same distr)");
+                    Console.WriteLine("- 0 makes common names are extremely likely (expect to see duplicates)");
+                    Console.WriteLine("- 50 (default) where the outputs follow the same distribution as the data");
+                    Console.WriteLine("- 75 is where all names are equally likely to appear");
+                    Console.WriteLine("- 100 makes rare names more common than common names");
+                    Console.WriteLine("Example usage:");
+                    Console.WriteLine("namegen");
+                    Console.WriteLine(" output: \"Anna Wright\" note: will generate a name based on data (names are as likely to appear as often they appear in the data)");
+                    Console.WriteLine("namegen male 100 black 0");
+                    Console.WriteLine(" output: \"Terell Bailey\" note: will generate a more rare male given name with a common black surname");
+                    Console.WriteLine("namegen f 80");
+                    Console.WriteLine(" output: \"Maisha Camero\" note: will generate a more rare female given name and a more rare surname");
+                    return;
+
+                case "v":
+                case "version":
+                    Console.WriteLine($"Version {version.ToString(3)}");
                     return;
             }
         }
 
+        // Setting default values
         string givenNameDataPath = GIVEN_NAMES_ALL;
         string surnameDataPath = SURNAMES_ALL;
-        double givenNameBeta = 1;
-        double surnameBeta = 1;
+        double givenNameRarity = 50;
+        double surnameRarity = 50;
 
         // Harvest any entered beta values
         List<double> betas = new List<double>();
@@ -168,18 +177,17 @@ class Program
         // Set beta values if captured
         if (betas.Count > 0)
         {
-            givenNameBeta = betas[0];
+            givenNameRarity = betas[0];
 
             if (betas.Count > 1)
             {
-                surnameBeta = betas[1];
+                surnameRarity = betas[1];
             }
             else
             {
-                surnameBeta = betas[0];
+                surnameRarity = betas[0];
             }
         }
-
 
         // Check for name data specifications
         for (int i = 0; i < args.Length; i++)
@@ -198,11 +206,31 @@ class Program
             }
         }
 
+        static double Map(double value, double inMin, double inMax, double outMin, double outMax)
+        {
+            return (value - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
+        }
+
+        // Helper function to transform user input to beta value before loading data
+        static double RarityToBeta(double rarity)
+        {
+            rarity = Math.Clamp(rarity, 0, 100);
+            if (rarity <= 50)
+                return Map(rarity, 0, 50, 2, 1);
+            return Map(rarity, 50, 100, 1, -1);
+        }
+
+        // This function just cleans up duplicate loading data code
+        static NameData LoadNameData(string path, double rarity)
+        {
+            var filepath = GetDataFilePath(path);
+            double beta = RarityToBeta(rarity);
+            return NameData.Load(filepath, beta);
+        }
+
         // Load the relative data with the beta values
-        givenNameDataPath = GetDataFilePath(givenNameDataPath);
-        var givenNameData = NameData.Load(givenNameDataPath, givenNameBeta);
-        surnameDataPath = GetDataFilePath(surnameDataPath);
-        var surnameData = NameData.Load(surnameDataPath, surnameBeta);
+        var givenNameData = LoadNameData(givenNameDataPath, givenNameRarity);
+        var surnameData = LoadNameData(surnameDataPath, surnameRarity);
 
         // Generate the name
         var name = NameGenerator.Next(givenNameData, surnameData);
